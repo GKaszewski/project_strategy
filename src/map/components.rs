@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Biome {
     Mountain,
     Plains,
@@ -66,5 +66,143 @@ impl Biome {
         } else {
             Biome::Mountain
         }
+    }
+
+    pub fn simple_biome(value: f64) -> Biome {
+        if value < 0.1 {
+            Biome::Plains
+        } else if value < 0.2 {
+            Biome::Forest
+        } else if value < 0.3 {
+            Biome::Desert
+        } else if value < 0.4 {
+            Biome::Mountain
+        } else {
+            Biome::Snow
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum TileResource {
+    Wood,
+    Stone,
+    Iron,
+    Nitre,
+    Coal,
+    Oil,
+    Uranium,
+    Tea,
+    Marble,
+    Salt,
+    Copper,
+    Diamond,
+    Ivory,
+    Banana,
+    Wheat,
+    Rice,
+    Sugar,
+    Spices,
+}
+
+impl TileResource {
+    pub fn get_from_number(number: i32) -> Option<Self> {
+        match number {
+            0 => Some(Self::Wood),
+            1 => Some(Self::Stone),
+            2 => Some(Self::Iron),
+            3 => Some(Self::Nitre),
+            4 => Some(Self::Coal),
+            5 => Some(Self::Oil),
+            6 => Some(Self::Uranium),
+            7 => Some(Self::Tea),
+            8 => Some(Self::Marble),
+            9 => Some(Self::Salt),
+            10 => Some(Self::Copper),
+            11 => Some(Self::Diamond),
+            12 => Some(Self::Ivory),
+            13 => Some(Self::Banana),
+            14 => Some(Self::Wheat),
+            15 => Some(Self::Rice),
+            16 => Some(Self::Sugar),
+            17 => Some(Self::Spices),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TileAttributes {
+    production: i32,
+    science: i32,
+    attractiveness: i32,
+}
+
+impl TileAttributes {
+    pub fn production(&self) -> i32 {
+        self.production
+    }
+
+    pub fn science(&self) -> i32 {
+        self.science
+    }
+
+    pub fn attractiveness(&self) -> i32 {
+        self.attractiveness
+    }
+}
+
+impl Default for TileAttributes {
+    fn default() -> Self {
+        Self {
+            production: 0,
+            science: 0,
+            attractiveness: 0,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Tile {
+    biome: Biome,
+    attributes: TileAttributes,
+    strategic_resource: Option<TileResource>,
+    trade_resource: Option<TileResource>,
+}
+
+impl Default for Tile {
+    fn default() -> Self {
+        Self {
+            biome: Biome::Plains,
+            attributes: TileAttributes::default(),
+            strategic_resource: None,
+            trade_resource: None,
+        }
+    }
+}
+
+impl Tile {
+    pub fn new(
+        biome: Biome,
+        production: i32,
+        science: i32,
+        attractiveness: i32,
+        special_resource: Option<TileResource>,
+        trade_resource: Option<TileResource>,
+    ) -> Self {
+        Self {
+            biome,
+            attributes: TileAttributes {
+                production,
+                science,
+                attractiveness,
+            },
+            strategic_resource: special_resource,
+            trade_resource,
+        }
+    }
+
+    pub fn cost(&self) -> Option<u32> {
+        self.biome.cost()
     }
 }

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use systems::{handle_camera_input, setup_camera};
 
-mod components;
+pub mod components;
 mod systems;
 
 pub struct CameraPlugin;

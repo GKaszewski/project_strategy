@@ -1,4 +1,4 @@
-use super::{components::Biome, HEX_SIZE};
+use super::components::{Biome, Tile, TileResource};
 use bevy::{
     prelude::*,
     render::{
@@ -13,12 +13,13 @@ use rand::prelude::*;
 
 pub fn generate_terrain_hex_grid(
     map_radius: u32,
+    hex_size: Vec2,
     commands: &mut Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-) -> HexagonalMap<(Biome, Entity)> {
+) -> HexagonalMap<(Tile, Entity)> {
     let layout = HexLayout {
-        hex_size: HEX_SIZE,
+        hex_size,
         ..default()
     };
 
@@ -38,9 +39,10 @@ pub fn generate_terrain_hex_grid(
 
     HexagonalMap::new(Hex::ZERO, map_radius, |coord| {
         let elevation = simplex.get([coord.x as f64, coord.y as f64]);
-        let moisture = simplex.get([coord.x as f64 + 100.0, coord.y as f64 + 100.0]);
+        // let moisture = simplex.get([coord.x as f64 + 100.0, coord.y as f64 + 100.0]);
         let pos = layout.hex_to_world_pos(coord);
-        let biome = Biome::from_elevation_and_moisture(elevation, moisture);
+        // let biome = Biome::from_elevation_and_moisture(elevation, moisture);
+        let biome = Biome::simple_biome(elevation);
         let material = match biome {
             Biome::Plains => plains_mat.clone(),
             Biome::Forest => forest_mat.clone(),
@@ -49,6 +51,27 @@ pub fn generate_terrain_hex_grid(
             Biome::DeepWater => deep_water_mat.clone(),
             Biome::Desert => desert_mat.clone(),
             Biome::Snow => snow_mat.clone(),
+        };
+
+        let tile_random = rng.gen_range(0..100);
+        let tile = match tile_random {
+            0..=10 => Tile::new(
+                biome,
+                rng.gen_range(0..100),
+                rng.gen_range(0..100),
+                rng.gen_range(0..100),
+                None,
+                None,
+            ),
+            11..=20 => Tile::new(
+                biome,
+                rng.gen_range(0..100),
+                rng.gen_range(0..100),
+                rng.gen_range(0..100),
+                TileResource::get_from_number(rng.gen_range(0..100)),
+                TileResource::get_from_number(rng.gen_range(0..100)),
+            ),
+            _ => Tile::default(),
         };
 
         let entity = commands
@@ -60,7 +83,7 @@ pub fn generate_terrain_hex_grid(
             })
             .id();
 
-        (biome, entity)
+        (tile, entity)
     })
 }
 

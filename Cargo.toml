@@ -7,6 +7,9 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.13.2"
+bevy-inspector-egui = "0.24.0"
+bevy_editor_pls = "0.8.1"
+bevy_egui = "0.27.1"
 hexx = { version = "0.17.0", features = ["bevy_reflect"] }
 noise = "0.9.0"
 rand = "0.8.5"

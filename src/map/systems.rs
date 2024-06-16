@@ -1,19 +1,34 @@
 use bevy::{prelude::*, utils::HashSet, window::PrimaryWindow};
 use hexx::{algorithms::field_of_movement, *};
 
+use crate::camera::components::GameCamera;
+
+use super::resources::HexGrid;
+use super::resources::MapSettings;
+use super::resources::SelectedTile;
 use super::utils::generate_terrain_hex_grid;
-use super::{resources::HexGrid, BUDGET, HEX_SIZE, MAP_RADIUS};
 
 pub fn setup_grid(
     mut commands: Commands,
+    settings: Res<MapSettings>,
     meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<ColorMaterial>>,
 ) {
+    if !settings.is_changed() {
+        return;
+    }
+
     let layout = HexLayout {
-        hex_size: HEX_SIZE,
+        hex_size: settings.hex_size,
         ..default()
     };
-    let entities = generate_terrain_hex_grid(MAP_RADIUS, &mut commands, meshes, materials);
+    let entities = generate_terrain_hex_grid(
+        settings.map_radius,
+        settings.hex_size,
+        &mut commands,
+        meshes,
+        materials,
+    );
     commands.insert_resource(HexGrid {
         entities,
         reachable_entities: HashSet::default(),
@@ -23,10 +38,12 @@ pub fn setup_grid(
 
 pub fn handle_input(
     windows: Query<&Window, With<PrimaryWindow>>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
+    cameras: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
     mut tile_transforms: Query<(Entity, &mut Transform)>,
     mut current: Local<Hex>,
     mut grid: ResMut<HexGrid>,
+    settings: Res<MapSettings>,
+    mut selectedTile: ResMut<SelectedTile>,
 ) {
     let window = windows.single();
     let (camera, cam_transform) = cameras.single();
@@ -43,8 +60,14 @@ pub fn handle_input(
 
         *current = hex_pos;
 
-        let field_of_movement = field_of_movement(hex_pos, BUDGET, |h| {
-            grid.entities.get(h).and_then(|(biome, _)| biome.cost())
+        if let Some((tile, _)) = grid.entities.get(hex_pos) {
+            selectedTile.0 = Some(tile.clone());
+        } else {
+            selectedTile.0 = None;
+        }
+
+        let field_of_movement = field_of_movement(hex_pos, settings.budget, |h| {
+            grid.entities.get(h).and_then(|(tile, _)| tile.cost())
         });
 
         let reachable_entities: HashSet<_> = field_of_movement
@@ -70,6 +93,7 @@ pub fn regenerate_grid(
     materials: ResMut<Assets<ColorMaterial>>,
     mut grid: ResMut<HexGrid>,
     keys: Res<ButtonInput<KeyCode>>,
+    settings: Res<MapSettings>,
 ) {
     if keys.just_pressed(KeyCode::KeyR) {
         grid.entities.iter_mut().for_each(|hex| {
@@ -78,7 +102,13 @@ pub fn regenerate_grid(
             }
         });
 
-        grid.entities = generate_terrain_hex_grid(MAP_RADIUS, &mut commands, meshes, materials);
+        grid.entities = generate_terrain_hex_grid(
+            settings.map_radius,
+            settings.hex_size,
+            &mut commands,
+            meshes,
+            materials,
+        );
         grid.reachable_entities.clear();
     }
 }

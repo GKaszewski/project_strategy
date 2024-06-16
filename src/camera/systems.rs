@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 
+use super::components::GameCamera;
+
 pub fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn((Camera2dBundle::default(), GameCamera));
 }
 
 pub fn handle_camera_input(
