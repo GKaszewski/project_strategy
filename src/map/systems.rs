@@ -43,7 +43,7 @@ pub fn handle_input(
     mut current: Local<Hex>,
     mut grid: ResMut<HexGrid>,
     settings: Res<MapSettings>,
-    mut selectedTile: ResMut<SelectedTile>,
+    mut selected_tile: ResMut<SelectedTile>,
 ) {
     let window = windows.single();
     let (camera, cam_transform) = cameras.single();
@@ -61,9 +61,9 @@ pub fn handle_input(
         *current = hex_pos;
 
         if let Some((tile, _)) = grid.entities.get(hex_pos) {
-            selectedTile.0 = Some(tile.clone());
+            selected_tile.0 = Some(tile.clone());
         } else {
-            selectedTile.0 = None;
+            selected_tile.0 = None;
         }
 
         let field_of_movement = field_of_movement(hex_pos, settings.budget, |h| {
