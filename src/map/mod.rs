@@ -1,9 +1,10 @@
 use bevy::prelude::*;
-use systems::{handle_input, setup_grid};
+use systems::{handle_input, regenerate_grid, setup_grid};
 
 mod components;
 mod resources;
 mod systems;
+mod utils;
 
 pub struct MapPlugin;
 
@@ -14,6 +15,6 @@ pub const BUDGET: u32 = 7;
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_grid)
-            .add_systems(Update, handle_input);
+            .add_systems(Update, (handle_input, regenerate_grid));
     }
 }

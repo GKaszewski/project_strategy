@@ -1,94 +1,24 @@
-use bevy::{
-    prelude::*,
-    render::{
-        mesh::{Indices, PrimitiveTopology},
-        render_asset::RenderAssetUsages,
-    },
-    utils::HashSet,
-    window::PrimaryWindow,
-};
-use hexx::{algorithms::field_of_movement, storage::HexagonalMap, *};
-use rand::prelude::*;
+use bevy::{prelude::*, utils::HashSet, window::PrimaryWindow};
+use hexx::{algorithms::field_of_movement, *};
 
-use super::{components::Biome, resources::HexGrid, BUDGET, HEX_SIZE, MAP_RADIUS};
+use super::utils::generate_terrain_hex_grid;
+use super::{resources::HexGrid, BUDGET, HEX_SIZE, MAP_RADIUS};
 
 pub fn setup_grid(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let layout = HexLayout {
         hex_size: HEX_SIZE,
         ..default()
     };
-
-    let mesh = meshes.add(hexagonal_plane(&layout));
-
-    let plains_mat = materials.add(Color::WHITE);
-    let forest_mat = materials.add(Color::GREEN);
-    let mountain_mat = materials.add(Color::GRAY);
-    let shallow_water_mat = materials.add(Color::BLUE);
-    let deep_water_mat = materials.add(Color::NAVY);
-    let desert_mat = materials.add(Color::ORANGE);
-    let snow_mat = materials.add(Color::BEIGE);
-
-    let mut rng = rand::thread_rng();
-
-    let entities = HexagonalMap::new(Hex::ZERO, MAP_RADIUS, |coord| {
-        let biome = match rng.gen_range(0..=6) {
-            0 => Biome::Plains,
-            1 => Biome::Forest,
-            2 => Biome::Mountain,
-            3 => Biome::ShallowWater,
-            4 => Biome::DeepWater,
-            5 => Biome::Desert,
-            6 => Biome::Snow,
-            _ => unreachable!("Invalid biome"),
-        };
-        let pos = layout.hex_to_world_pos(coord);
-        let material = match biome {
-            Biome::Plains => plains_mat.clone(),
-            Biome::Forest => forest_mat.clone(),
-            Biome::Mountain => mountain_mat.clone(),
-            Biome::ShallowWater => shallow_water_mat.clone(),
-            Biome::DeepWater => deep_water_mat.clone(),
-            Biome::Desert => desert_mat.clone(),
-            Biome::Snow => snow_mat.clone(),
-        };
-
-        let entity = commands
-            .spawn(ColorMesh2dBundle {
-                mesh: mesh.clone().into(),
-                material,
-                transform: Transform::from_xyz(pos.x, pos.y, 0.0),
-                ..default()
-            })
-            .id();
-
-        (biome, entity)
-    });
-
+    let entities = generate_terrain_hex_grid(MAP_RADIUS, &mut commands, meshes, materials);
     commands.insert_resource(HexGrid {
         entities,
         reachable_entities: HashSet::default(),
         layout,
     });
-}
-
-fn hexagonal_plane(hex_layout: &HexLayout) -> Mesh {
-    let mesh_info = PlaneMeshBuilder::new(hex_layout)
-        .facing(Vec3::Z)
-        .center_aligned()
-        .build();
-
-    Mesh::new(
-        PrimitiveTopology::TriangleList,
-        RenderAssetUsages::RENDER_WORLD,
-    )
-    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, mesh_info.vertices)
-    .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
-    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
-    .with_inserted_indices(Indices::U16(mesh_info.indices))
 }
 
 pub fn handle_input(
@@ -131,5 +61,24 @@ pub fn handle_input(
         }
 
         grid.reachable_entities = reachable_entities;
+    }
+}
+
+pub fn regenerate_grid(
+    mut commands: Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<ColorMaterial>>,
+    mut grid: ResMut<HexGrid>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::KeyR) {
+        grid.entities.iter_mut().for_each(|hex| {
+            for (_, entity) in hex.iter() {
+                commands.entity(*entity).despawn_recursive();
+            }
+        });
+
+        grid.entities = generate_terrain_hex_grid(MAP_RADIUS, &mut commands, meshes, materials);
+        grid.reachable_entities.clear();
     }
 }
