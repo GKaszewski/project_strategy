@@ -1,6 +1,9 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
+use hexx::Hex;
 
-use super::components::{Experience, Health, Hero, HeroMaxUnits, HeroUnits, Level};
+use crate::{camera::components::GameCamera, map::resources::HexGrid};
+
+use super::components::{Experience, Health, Hero, HeroMaxUnits, HeroUnits, Level, SelectedHero};
 
 pub fn setup_player(
     mut commands: Commands,
@@ -29,4 +32,16 @@ pub fn setup_player(
         HeroUnits(vec![None; 10]),
         HeroMaxUnits(10),
     ));
+}
+
+pub fn handle_hero_movement(
+    mut hero_query: Query<(&Hero, &mut Transform), With<SelectedHero>>,
+    mouse_btn: ButtonInput<MouseButton>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    cameras: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
+    mut tile_transforms: Query<(Entity, &mut Transform)>,
+    mut current: Local<Hex>,
+    mut grid: ResMut<HexGrid>,
+) {
+    todo!()
 }

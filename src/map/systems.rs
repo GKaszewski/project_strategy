@@ -45,7 +45,6 @@ pub fn handle_input(
     mut grid: ResMut<HexGrid>,
     settings: Res<MapSettings>,
     mut selected_tile: ResMut<SelectedTile>,
-    mut gizmos: Gizmos,
 ) {
     let window = windows.single();
     let (camera, cam_transform) = cameras.single();

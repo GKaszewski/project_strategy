@@ -52,3 +52,6 @@ pub struct HeroUnits(pub Vec<Option<Entity>>);
 
 #[derive(Component)]
 pub struct HeroMaxUnits(pub u32);
+
+#[derive(Component)]
+pub struct SelectedHero(pub Entity);
