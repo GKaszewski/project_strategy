@@ -16,7 +16,7 @@ pub fn generate_terrain_hex_grid(
     hex_size: Vec2,
     commands: &mut Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> HexagonalMap<(Tile, Entity)> {
     let layout = HexLayout {
         hex_size,
@@ -53,32 +53,20 @@ pub fn generate_terrain_hex_grid(
             Biome::Snow => snow_mat.clone(),
         };
 
-        let tile_random = rng.gen_range(0..100);
-        let tile = match tile_random {
-            0..=10 => Tile::new(
-                biome,
-                rng.gen_range(0..100),
-                rng.gen_range(0..100),
-                rng.gen_range(0..100),
-                None,
-                None,
-            ),
-            11..=20 => Tile::new(
-                biome,
-                rng.gen_range(0..100),
-                rng.gen_range(0..100),
-                rng.gen_range(0..100),
-                TileResource::get_from_number(rng.gen_range(0..100)),
-                TileResource::get_from_number(rng.gen_range(0..100)),
-            ),
-            _ => Tile::default(),
-        };
+        let tile = Tile::new(
+            biome,
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            TileResource::get_from_number(rng.gen_range(0..=25)),
+            TileResource::get_from_number(rng.gen_range(0..=25)),
+        );
 
         let entity = commands
-            .spawn(ColorMesh2dBundle {
+            .spawn(PbrBundle {
                 mesh: mesh.clone().into(),
                 material,
-                transform: Transform::from_xyz(pos.x, pos.y, 0.0),
+                transform: Transform::from_xyz(pos.x, 1.0 / 2.0, pos.y),
                 ..default()
             })
             .id();
@@ -88,8 +76,8 @@ pub fn generate_terrain_hex_grid(
 }
 
 fn hexagonal_plane(hex_layout: &HexLayout) -> Mesh {
-    let mesh_info = PlaneMeshBuilder::new(hex_layout)
-        .facing(Vec3::Z)
+    let mesh_info = ColumnMeshBuilder::new(hex_layout, 1.0)
+        .without_bottom_face()
         .center_aligned()
         .build();
 
