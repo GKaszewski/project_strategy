@@ -1,4 +1,9 @@
-#[derive(Debug, Clone)]
+use bevy::{
+    prelude::Component,
+    reflect::{FromReflect, Reflect},
+};
+
+#[derive(Debug, Clone, Reflect)]
 pub enum Biome {
     Mountain,
     Plains,
@@ -83,7 +88,7 @@ impl Biome {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub enum TileResource {
     Wood,
     Stone,
@@ -131,7 +136,7 @@ impl TileResource {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect)]
 pub struct TileAttributes {
     production: i32,
     science: i32,
@@ -162,7 +167,7 @@ impl Default for TileAttributes {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component, Reflect)]
 pub struct Tile {
     biome: Biome,
     attributes: TileAttributes,

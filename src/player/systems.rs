@@ -16,6 +16,7 @@ pub fn setup_player(
     let hero_mat = materials.add(Color::rgb(0.0, 0.0, 1.0));
 
     commands.spawn((
+        Name::new("Hero".to_string()),
         PbrBundle {
             mesh: hero_shape,
             material: hero_mat,

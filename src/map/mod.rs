@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use components::Tile;
 use resources::{MapSettings, SelectedTile};
 use systems::{handle_input, regenerate_grid, setup_grid};
 
@@ -13,6 +14,7 @@ impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MapSettings>()
             .init_resource::<SelectedTile>()
+            .register_type::<Tile>()
             .add_systems(Startup, setup_grid)
             .add_systems(Update, (handle_input, regenerate_grid));
     }

@@ -63,12 +63,16 @@ pub fn generate_terrain_hex_grid(
         );
 
         let entity = commands
-            .spawn(PbrBundle {
-                mesh: mesh.clone().into(),
-                material,
-                transform: Transform::from_xyz(pos.x, 1.0 / 2.0, pos.y),
-                ..default()
-            })
+            .spawn((
+                Name::new("HexTile".to_string()),
+                PbrBundle {
+                    mesh: mesh.clone().into(),
+                    material,
+                    transform: Transform::from_xyz(pos.x, 1.0 / 2.0, pos.y),
+                    ..default()
+                },
+                tile.clone(),
+            ))
             .id();
 
         (tile, entity)

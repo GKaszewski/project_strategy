@@ -17,8 +17,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Run tests
-        run: cargo test --verbose
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libwayland-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
       - name: Build
@@ -38,6 +36,8 @@ jobs:
           path: ${{ env.binary }}.zip
           name: linux
           retention-days: 1
+      - name: Run tests
+        run: cargo test --verbose
 
   release-for-windows:
     runs-on: windows-latest
@@ -47,8 +47,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
-      - name: Run tests
-        run: cargo test --verbose
       - name: Build
         run: |
           cargo build --release --target x86_64-pc-windows-msvc
@@ -70,3 +68,5 @@ jobs:
           path: ${{ env.binary }}.zip
           name: windows
           retention-days: 1
+      - name: Run tests
+        run: cargo test --verbose

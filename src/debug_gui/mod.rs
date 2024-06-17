@@ -10,7 +10,6 @@ pub struct DebugGuiPlugin;
 
 impl Plugin for DebugGuiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(EguiPlugin)
-            .add_systems(Update, draw_tile_stats);
+        app.add_systems(Update, draw_tile_stats);
     }
 }
