@@ -12,7 +12,11 @@ pub fn draw_tile_stats(mut contexts: EguiContexts, selected_tile: Res<SelectedTi
         egui::Window::new("Tile Info").show(contexts.ctx_mut(), |ui| {
             ui.label("Tile Info");
             ui.separator();
-            ui.label(format!("Selected Tile: {:?}", tile));
+            ui.label(format!(
+                "Selected Tile: {:?}, Movement Cost: {:?}",
+                tile,
+                tile.cost()
+            ));
         });
     }
 }

@@ -6,7 +6,7 @@ use super::components::Tile;
 
 #[derive(Debug, Resource)]
 pub struct HexGrid {
-    pub entities: HexagonalMap<(Tile, Entity)>,
+    pub entities: HexagonalMap<Entity>,
     pub reachable_entities: HashSet<Entity>,
     pub layout: HexLayout,
 }
@@ -14,7 +14,7 @@ pub struct HexGrid {
 impl Default for HexGrid {
     fn default() -> Self {
         Self {
-            entities: HexagonalMap::new(Hex::ZERO, 0, |_| (Tile::default(), Entity::PLACEHOLDER)),
+            entities: HexagonalMap::new(Hex::ZERO, 0, |_| Entity::PLACEHOLDER),
             reachable_entities: HashSet::default(),
             layout: HexLayout::default(),
         }

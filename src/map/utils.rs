@@ -17,7 +17,7 @@ pub fn generate_terrain_hex_grid(
     commands: &mut Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-) -> HexagonalMap<(Tile, Entity)> {
+) -> HexagonalMap<Entity> {
     let layout = HexLayout {
         hex_size,
         ..default()
@@ -75,7 +75,7 @@ pub fn generate_terrain_hex_grid(
             ))
             .id();
 
-        (tile, entity)
+        entity
     })
 }
 

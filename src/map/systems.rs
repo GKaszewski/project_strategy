@@ -3,6 +3,7 @@ use hexx::{algorithms::field_of_movement, *};
 
 use crate::camera::components::GameCamera;
 
+use super::components::Tile;
 use super::resources::HexGrid;
 use super::resources::MapSettings;
 use super::resources::SelectedTile;
@@ -38,8 +39,10 @@ pub fn setup_grid(
 }
 
 pub fn handle_input(
+    mut commands: Commands,
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
+    tiles: Query<(Entity, &Tile)>,
     mut tile_transforms: Query<(Entity, &mut Transform)>,
     mut current: Local<Hex>,
     mut grid: ResMut<HexGrid>,
@@ -74,19 +77,29 @@ pub fn handle_input(
         }
         *current = hex_pos;
 
-        if let Some((tile, _)) = grid.entities.get(*current) {
-            selected_tile.0 = Some(tile.clone());
+        if let Some(entity) = grid.entities.get(*current) {
+            tiles.iter().for_each(|(ent, tile)| {
+                if commands.entity(ent).id() == commands.entity(*entity).id() {
+                    selected_tile.0 = Some(tile.clone());
+                }
+            });
         } else {
             selected_tile.0 = None;
         }
 
         let field_of_movement = field_of_movement(hex_pos, settings.budget, |h| {
-            grid.entities.get(h).and_then(|(tile, _)| tile.cost())
+            for (entity, tile) in tiles.iter() {
+                if grid.entities.get(h).map(|&ent| ent) == Some(entity) {
+                    return tile.cost();
+                }
+            }
+
+            None
         });
 
         let reachable_entities: HashSet<_> = field_of_movement
             .into_iter()
-            .filter_map(|h| grid.entities.get(h).map(|&(_, ent)| ent))
+            .filter_map(|h| grid.entities.get(h).map(|&ent| ent))
             .collect();
 
         for (entity, mut transform) in tile_transforms.iter_mut() {
@@ -111,7 +124,7 @@ pub fn regenerate_grid(
 ) {
     if keys.just_pressed(KeyCode::KeyR) {
         grid.entities.iter_mut().for_each(|hex| {
-            for (_, entity) in hex.iter() {
+            for entity in hex.iter() {
                 commands.entity(*entity).despawn_recursive();
             }
         });
