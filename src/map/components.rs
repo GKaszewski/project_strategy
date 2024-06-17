@@ -1,7 +1,4 @@
-use bevy::{
-    prelude::Component,
-    reflect::{FromReflect, Reflect},
-};
+use bevy::{prelude::Component, reflect::Reflect};
 
 #[derive(Debug, Clone, Reflect)]
 pub enum Biome {

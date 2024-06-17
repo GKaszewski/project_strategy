@@ -46,7 +46,6 @@ pub fn setup_player(
         PickableBundle::default(),
         On::<Pointer<Click>>::target_commands_mut(|click, target_commands| {
             if click.button == PointerButton::Primary {
-                println!("Selected hero: {:?}", click.target);
                 target_commands.insert(SelectedHero { 0: click.target });
             }
         }),
@@ -95,8 +94,6 @@ pub fn display_field_of_movement(
 
         None
     });
-
-    println!("FIELD OF MOVEMENT!");
 
     let reachable_entities: HashSet<_> = field_of_movement
         .into_iter()
