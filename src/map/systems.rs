@@ -76,9 +76,6 @@ pub fn handle_input(
 
         if let Some((tile, _)) = grid.entities.get(*current) {
             selected_tile.0 = Some(tile.clone());
-            println!("{:?}", *tile);
-            println!("{:?}", hex_pos);
-            println!("{:?}", *current);
         } else {
             selected_tile.0 = None;
         }
