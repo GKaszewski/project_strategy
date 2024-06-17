@@ -16,6 +16,6 @@ impl Plugin for MapPlugin {
             .init_resource::<SelectedTile>()
             .register_type::<Tile>()
             .add_systems(Startup, setup_grid)
-            .add_systems(Update, (handle_input, regenerate_grid));
+            .add_systems(Update, (regenerate_grid));
     }
 }

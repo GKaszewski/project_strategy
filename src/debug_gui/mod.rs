@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_egui::EguiPlugin;
 use systems::draw_tile_stats;
 
 pub mod components;

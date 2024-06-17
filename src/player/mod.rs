@@ -1,11 +1,15 @@
 use bevy::prelude::*;
 use components::{
     AttackPoints, DefensePoints, Experience, Health, HeroMaxUnits, HeroUnits, Level,
-    MovementPoints, Position, Range, SelectedHero, UnitType,
+    MovementPoints, Position, Range, UnitType,
 };
-use systems::setup_player;
+use events::HeroDeselectEvent;
+use systems::{
+    display_field_of_movement, handle_hero_deselect, handle_hero_movement, setup_player,
+};
 
 pub mod components;
+mod events;
 pub mod resources;
 mod systems;
 
@@ -24,7 +28,8 @@ impl Plugin for PlayerPlugin {
             .register_type::<UnitType>()
             .register_type::<HeroUnits>()
             .register_type::<HeroMaxUnits>()
-            .register_type::<SelectedHero>()
-            .add_systems(Startup, setup_player);
+            .add_event::<HeroDeselectEvent>()
+            .add_systems(Startup, setup_player)
+            .add_systems(Update, (display_field_of_movement, handle_hero_deselect));
     }
 }

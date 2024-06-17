@@ -25,7 +25,7 @@ pub struct AttackPoints(pub i32);
 #[derive(Component, Reflect)]
 pub struct DefensePoints(pub i32);
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Debug)]
 pub struct MovementPoints(pub u32);
 
 #[derive(Component, Reflect)]
@@ -53,5 +53,8 @@ pub struct HeroUnits(pub Vec<Option<Entity>>);
 #[derive(Component, Reflect)]
 pub struct HeroMaxUnits(pub u32);
 
-#[derive(Component, Reflect)]
+#[derive(Component)]
 pub struct SelectedHero(pub Entity);
+
+#[derive(Component)]
+pub struct HasCalculatedFieldOfMovement;
