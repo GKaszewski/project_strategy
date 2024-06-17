@@ -61,12 +61,12 @@ pub fn handle_input(
             return;
         };
         let point = ray.get_point(distance);
-        gizmos.circle(
-            point + Vec3::Y * 8.0,
-            Direction3d::new_unchecked(Vec3::Y),
-            8.0,
-            Color::WHITE,
-        );
+        // gizmos.circle(
+        //     point + Vec3::Y * 8.0,
+        //     Direction3d::new_unchecked(Vec3::Y),
+        //     8.0,
+        //     Color::WHITE,
+        // );
 
         let hex_pos = grid.layout.world_pos_to_hex(Vec2::new(point.x, point.z));
 

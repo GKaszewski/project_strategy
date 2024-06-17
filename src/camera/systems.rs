@@ -7,7 +7,7 @@ use super::components::GameCamera;
 pub fn setup_camera(mut commands: Commands) {
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 60.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
+            transform: Transform::from_xyz(0.0, 100.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
             ..Default::default()
         },
         GameCamera,
@@ -51,7 +51,7 @@ pub fn handle_camera_input(
         }
 
         for ev in evr_scroll.read() {
-            transform.translation.y -= ev.y * 10.0;
+            transform.translation.y = (transform.translation.y - ev.y * 10.0).min(550.0).max(60.0);
         }
     }
 }
