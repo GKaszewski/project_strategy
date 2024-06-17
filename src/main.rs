@@ -23,6 +23,6 @@ fn main() {
         .add_plugins(CameraPlugin)
         .add_plugins(DebugGuiPlugin)
         .add_plugins(PlayerPlugin)
-        // .insert_resource(DebugPickingMode::Normal)
+        //.insert_resource(DebugPickingMode::Normal)
         .run();
 }

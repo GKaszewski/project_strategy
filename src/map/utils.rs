@@ -1,4 +1,7 @@
-use super::components::{Biome, Tile, TileResource};
+use super::{
+    components::{Biome, HexPreviewMarker, Tile, TileResource},
+    resources::HexPreview,
+};
 use bevy::{
     prelude::*,
     render::{
@@ -67,7 +70,7 @@ pub fn generate_terrain_hex_grid(
                 Name::new("HexTile".to_string()),
                 PbrBundle {
                     mesh: mesh.clone().into(),
-                    material,
+                    material: material.clone(),
                     transform: Transform::from_xyz(pos.x, 1.0 / 2.0, pos.y),
                     ..default()
                 },
@@ -93,4 +96,54 @@ fn hexagonal_plane(hex_layout: &HexLayout) -> Mesh {
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
     .with_inserted_indices(Indices::U16(mesh_info.indices))
+}
+
+pub fn get_color_from_biome(biome: &Biome) -> Color {
+    return match biome {
+        Biome::Plains => Color::GREEN,
+        Biome::Forest => Color::DARK_GREEN,
+        Biome::Mountain => Color::GRAY,
+        Biome::ShallowWater => Color::BLUE,
+        Biome::DeepWater => Color::NAVY,
+        Biome::Desert => Color::ORANGE,
+        Biome::Snow => Color::BEIGE,
+    };
+}
+
+pub fn generate_hex_preview(
+    hex_size: Vec2,
+    world_pos: Vec2,
+    commands: &mut Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    //TODO: rewrite this.
+
+    let mesh = meshes.add(hexagonal_plane(&HexLayout {
+        hex_size,
+        ..default()
+    }));
+
+    let material = materials.add(Color::YELLOW);
+
+    let hex_preview_entity = commands
+        .spawn((
+            Name::new("HexPreview".to_string()),
+            PbrBundle {
+                mesh: mesh.into(),
+                material: material.into(),
+                transform: Transform::from_xyz(0.0, 0.0, 0.0),
+                ..default()
+            },
+            HexPreviewMarker,
+        ))
+        .id();
+
+    commands.insert_resource(HexPreview {
+        entity: hex_preview_entity,
+        layout: HexLayout {
+            hex_size,
+            ..default()
+        },
+    });
 }

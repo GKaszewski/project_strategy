@@ -1,6 +1,6 @@
 use bevy::{prelude::Component, reflect::Reflect};
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, PartialEq, Eq)]
 pub enum Biome {
     Mountain,
     Plains,
@@ -85,7 +85,7 @@ impl Biome {
     }
 }
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, PartialEq, Eq)]
 pub enum TileResource {
     Wood,
     Stone,
@@ -133,11 +133,11 @@ impl TileResource {
     }
 }
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, PartialEq, Eq)]
 pub struct TileAttributes {
-    production: i32,
-    science: i32,
-    attractiveness: i32,
+    pub production: i32,
+    pub science: i32,
+    pub attractiveness: i32,
 }
 
 impl TileAttributes {
@@ -164,12 +164,12 @@ impl Default for TileAttributes {
     }
 }
 
-#[derive(Debug, Clone, Component, Reflect)]
+#[derive(Debug, Clone, Component, Reflect, PartialEq, Eq)]
 pub struct Tile {
-    biome: Biome,
-    attributes: TileAttributes,
-    strategic_resource: Option<TileResource>,
-    trade_resource: Option<TileResource>,
+    pub biome: Biome,
+    pub attributes: TileAttributes,
+    pub strategic_resource: Option<TileResource>,
+    pub trade_resource: Option<TileResource>,
 }
 
 impl Default for Tile {
@@ -208,3 +208,6 @@ impl Tile {
         self.biome.cost()
     }
 }
+
+#[derive(Component)]
+pub struct HexPreviewMarker;

@@ -3702,7 +3702,6 @@ dependencies = [
  "bevy_editor_pls",
  "bevy_egui 0.27.1",
  "bevy_mod_picking",
- "bevy_mod_raycast",
  "hexx",
  "noise",
  "rand",

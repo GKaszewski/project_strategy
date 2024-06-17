@@ -1,13 +1,16 @@
-use bevy::{prelude::*, utils::HashSet, window::PrimaryWindow};
-use hexx::{algorithms::field_of_movement, *};
+use bevy::window::PrimaryWindow;
+use bevy::{prelude::*, utils::HashSet};
+use hexx::*;
 
 use crate::camera::components::GameCamera;
 
 use super::components::Tile;
+use super::events::{TileDeselectEvent, TileSelectEvent};
 use super::resources::HexGrid;
 use super::resources::MapSettings;
 use super::resources::SelectedTile;
 use super::utils::generate_terrain_hex_grid;
+use super::utils::get_color_from_biome;
 
 pub fn setup_grid(
     mut commands: Commands,
@@ -38,82 +41,6 @@ pub fn setup_grid(
     });
 }
 
-pub fn handle_input(
-    mut commands: Commands,
-    windows: Query<&Window, With<PrimaryWindow>>,
-    cameras: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
-    tiles: Query<(Entity, &Tile)>,
-    mut tile_transforms: Query<(Entity, &mut Transform)>,
-    mut current: Local<Hex>,
-    mut grid: ResMut<HexGrid>,
-    settings: Res<MapSettings>,
-    mut selected_tile: ResMut<SelectedTile>,
-) {
-    let window = windows.single();
-    let (camera, cam_transform) = cameras.single();
-
-    if let Some(ray) = window
-        .cursor_position()
-        .and_then(|p| camera.viewport_to_world(cam_transform, p))
-    {
-        let Some(distance) = ray.intersect_plane(
-            Vec3::new(ray.origin.x, 0.5, ray.origin.z),
-            Plane3d::new(Vec3::Y),
-        ) else {
-            return;
-        };
-        let point = ray.get_point(distance);
-        // gizmos.circle(
-        //     point + Vec3::Y * 8.0,
-        //     Direction3d::new_unchecked(Vec3::Y),
-        //     8.0,
-        //     Color::WHITE,
-        // );
-
-        let hex_pos = grid.layout.world_pos_to_hex(Vec2::new(point.x, point.z));
-
-        if hex_pos == *current {
-            return;
-        }
-        *current = hex_pos;
-
-        if let Some(entity) = grid.entities.get(*current) {
-            tiles.iter().for_each(|(ent, tile)| {
-                if commands.entity(ent).id() == commands.entity(*entity).id() {
-                    selected_tile.0 = Some(tile.clone());
-                }
-            });
-        } else {
-            selected_tile.0 = None;
-        }
-
-        let field_of_movement = field_of_movement(hex_pos, settings.budget, |h| {
-            for (entity, tile) in tiles.iter() {
-                if grid.entities.get(h).map(|&ent| ent) == Some(entity) {
-                    return tile.cost();
-                }
-            }
-
-            None
-        });
-
-        let reachable_entities: HashSet<_> = field_of_movement
-            .into_iter()
-            .filter_map(|h| grid.entities.get(h).map(|&ent| ent))
-            .collect();
-
-        for (entity, mut transform) in tile_transforms.iter_mut() {
-            if reachable_entities.contains(&entity) {
-                *transform = transform.with_scale(Vec3::splat(0.9));
-            } else {
-                *transform = transform.with_scale(Vec3::splat(1.0));
-            }
-        }
-
-        grid.reachable_entities = reachable_entities;
-    }
-}
-
 pub fn regenerate_grid(
     mut commands: Commands,
     meshes: ResMut<Assets<Mesh>>,
@@ -137,5 +64,105 @@ pub fn regenerate_grid(
             materials,
         );
         grid.reachable_entities.clear();
+    }
+}
+
+pub fn handle_tile_selection(
+    mut commands: Commands,
+    mut ev_tile_select: EventWriter<TileSelectEvent>,
+    mut ev_tile_desel: EventWriter<TileDeselectEvent>,
+    tiles: Query<(Entity, &Tile)>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    cameras: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
+    grid: ResMut<HexGrid>,
+    mut current: Local<Hex>,
+    mut selected_tile: ResMut<SelectedTile>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
+) {
+    let window = windows.iter().next().unwrap();
+    let (camera, cam_transform) = cameras.iter().next().unwrap();
+
+    if mouse_button_input.just_pressed(MouseButton::Left) {
+        if selected_tile.tile.is_some() && selected_tile.entity.is_some() {
+            ev_tile_desel.send(TileDeselectEvent {
+                tile: selected_tile.tile.clone().unwrap(),
+                entity: selected_tile.entity.unwrap(),
+            });
+        }
+        selected_tile.tile = None;
+        selected_tile.entity = None;
+    }
+
+    if !mouse_button_input.just_pressed(MouseButton::Right) {
+        return;
+    }
+
+    let cursor_position = match window.cursor_position() {
+        Some(pos) => pos,
+        None => return,
+    };
+
+    if let Some(ray) = camera.viewport_to_world(cam_transform, cursor_position) {
+        let Some(distance) = ray.intersect_plane(
+            Vec3::new(ray.origin.x, 0.5, ray.origin.z),
+            Plane3d::new(Vec3::Y),
+        ) else {
+            return;
+        };
+
+        let point = ray.get_point(distance);
+        let hex_pos = grid.layout.world_pos_to_hex(Vec2::new(point.x, point.z));
+
+        if hex_pos == *current {
+            return;
+        }
+        *current = hex_pos;
+
+        if let Some(tile_entity) = grid.entities.get(*current) {
+            for (ent, tile) in tiles.iter() {
+                if commands.entity(*tile_entity).id() == commands.entity(ent).id() {
+                    // Deselect the previous tile
+                    if selected_tile.tile.is_some() && selected_tile.entity.is_some() {
+                        ev_tile_desel.send(TileDeselectEvent {
+                            tile: selected_tile.tile.clone().unwrap(),
+                            entity: selected_tile.entity.unwrap(),
+                        });
+                    }
+
+                    selected_tile.tile = Some(tile.clone());
+                    selected_tile.entity = Some(ent);
+
+                    ev_tile_select.send(TileSelectEvent {
+                        tile: tile.clone(),
+                        entity: ent,
+                    });
+                }
+            }
+        }
+    }
+}
+
+pub fn handle_selected_tile_material(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut tiles: Query<(&Tile, &Handle<StandardMaterial>)>,
+    mut ev_tile_select: EventReader<TileSelectEvent>,
+    mut ev_tile_deselect: EventReader<TileDeselectEvent>,
+) {
+    for event in ev_tile_select.read() {
+        for (tile_component, material_handle) in tiles.iter_mut() {
+            if tile_component == &event.tile {
+                let material = materials.get_mut(material_handle).unwrap();
+                material.base_color = Color::rgb(1.0, 1.0, 0.0);
+            }
+        }
+    }
+
+    for event in ev_tile_deselect.read() {
+        for (tile_component, material_handle) in tiles.iter_mut() {
+            if tile_component == &event.tile {
+                let material = materials.get_mut(material_handle).unwrap();
+                material.base_color = get_color_from_biome(&event.tile.biome);
+            }
+        }
     }
 }

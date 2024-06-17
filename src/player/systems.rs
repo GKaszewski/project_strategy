@@ -119,11 +119,11 @@ pub fn handle_hero_movement(
     mouse_btn: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
-    mut tile_transforms: Query<(Entity, &mut Transform), With<Tile>>,
+    mut tile_transforms: Query<(Entity, &mut Transform), (With<Tile>, Without<SelectedHero>)>,
     mut current: Local<Hex>,
     mut grid: ResMut<HexGrid>,
 ) {
-    todo!()
+    return;
 }
 
 pub fn handle_hero_deselect(

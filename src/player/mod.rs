@@ -30,6 +30,13 @@ impl Plugin for PlayerPlugin {
             .register_type::<HeroMaxUnits>()
             .add_event::<HeroDeselectEvent>()
             .add_systems(Startup, setup_player)
-            .add_systems(Update, (display_field_of_movement, handle_hero_deselect));
+            .add_systems(
+                Update,
+                (
+                    display_field_of_movement,
+                    handle_hero_movement,
+                    handle_hero_deselect,
+                ),
+            );
     }
 }

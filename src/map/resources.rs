@@ -21,6 +21,21 @@ impl Default for HexGrid {
     }
 }
 
+#[derive(Debug, Resource)]
+pub struct HexPreview {
+    pub entity: Entity,
+    pub layout: HexLayout,
+}
+
+impl Default for HexPreview {
+    fn default() -> Self {
+        Self {
+            entity: Entity::PLACEHOLDER,
+            layout: HexLayout::default(),
+        }
+    }
+}
+
 #[derive(Debug, Resource, Reflect, InspectorOptions)]
 pub struct MapSettings {
     pub hex_size: Vec2,
@@ -41,10 +56,16 @@ impl Default for MapSettings {
 }
 
 #[derive(Debug, Resource)]
-pub struct SelectedTile(pub Option<Tile>);
+pub struct SelectedTile {
+    pub tile: Option<Tile>,
+    pub entity: Option<Entity>,
+}
 
 impl Default for SelectedTile {
     fn default() -> Self {
-        Self(None)
+        Self {
+            tile: None,
+            entity: None,
+        }
     }
 }
