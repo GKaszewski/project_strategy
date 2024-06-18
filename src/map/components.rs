@@ -211,3 +211,6 @@ impl Tile {
 
 #[derive(Component)]
 pub struct HexPreviewMarker;
+
+#[derive(Component)]
+pub struct Cross;

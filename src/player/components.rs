@@ -58,3 +58,6 @@ pub struct SelectedHero(pub Entity);
 
 #[derive(Component)]
 pub struct HasCalculatedFieldOfMovement;
+
+#[derive(Component, Reflect)]
+pub struct MoveTarget(pub Hex);

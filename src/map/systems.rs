@@ -1,16 +1,18 @@
+use bevy::render::render_resource::Texture;
 use bevy::window::PrimaryWindow;
 use bevy::{prelude::*, utils::HashSet};
 use hexx::*;
 
 use crate::camera::components::GameCamera;
+use crate::map::components::Cross;
+use crate::player::components::{MoveTarget, SelectedHero};
+use crate::player::events::HeroDeselectEvent;
 
 use super::components::Tile;
 use super::events::{TileDeselectEvent, TileSelectEvent};
 use super::resources::HexGrid;
 use super::resources::MapSettings;
-use super::resources::SelectedTile;
 use super::utils::generate_terrain_hex_grid;
-use super::utils::get_color_from_biome;
 
 pub fn setup_grid(
     mut commands: Commands,
@@ -71,26 +73,44 @@ pub fn handle_tile_selection(
     mut commands: Commands,
     mut ev_tile_select: EventWriter<TileSelectEvent>,
     mut ev_tile_desel: EventWriter<TileDeselectEvent>,
+    mut ev_hero_deselect: EventWriter<HeroDeselectEvent>,
     tiles: Query<(Entity, &Tile)>,
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
     grid: ResMut<HexGrid>,
     mut current: Local<Hex>,
-    mut selected_tile: ResMut<SelectedTile>,
+    selected_hero_query: Query<Entity, With<SelectedHero>>,
+    move_target_query: Query<Option<&MoveTarget>, With<SelectedHero>>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
 ) {
+    if selected_hero_query.iter().next().is_none() {
+        return;
+    }
+
+    let selected_hero_entity = selected_hero_query.iter().next().unwrap();
+
     let window = windows.iter().next().unwrap();
     let (camera, cam_transform) = cameras.iter().next().unwrap();
 
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        if selected_tile.tile.is_some() && selected_tile.entity.is_some() {
-            ev_tile_desel.send(TileDeselectEvent {
-                tile: selected_tile.tile.clone().unwrap(),
-                entity: selected_tile.entity.unwrap(),
+        if move_target_query.iter().next().is_some() {
+            commands.entity(selected_hero_entity).remove::<MoveTarget>();
+
+            ev_hero_deselect.send(HeroDeselectEvent {
+                hero: selected_hero_entity,
+                button: None,
             });
+
+            for (ent, tile) in tiles.iter() {
+                if grid.entities.get(*current).map(|&e| e) == Some(ent) {
+                    ev_tile_desel.send(TileDeselectEvent {
+                        tile: tile.clone(),
+                        entity: ent,
+                        hex: *current,
+                    });
+                }
+            }
         }
-        selected_tile.tile = None;
-        selected_tile.entity = None;
     }
 
     if !mouse_button_input.just_pressed(MouseButton::Right) {
@@ -113,28 +133,31 @@ pub fn handle_tile_selection(
         let point = ray.get_point(distance);
         let hex_pos = grid.layout.world_pos_to_hex(Vec2::new(point.x, point.z));
 
-        if hex_pos == *current {
-            return;
-        }
         *current = hex_pos;
 
         if let Some(tile_entity) = grid.entities.get(*current) {
             for (ent, tile) in tiles.iter() {
+                if tile.cost() == None {
+                    continue;
+                }
+
+                if grid.entities.get(*current).map(|&e| e) == Some(ent) {
+                    ev_tile_desel.send(TileDeselectEvent {
+                        tile: tile.clone(),
+                        entity: ent,
+                        hex: *current,
+                    });
+                }
+
+                commands
+                    .entity(selected_hero_entity)
+                    .insert(MoveTarget(*current));
+
                 if commands.entity(*tile_entity).id() == commands.entity(ent).id() {
-                    // Deselect the previous tile
-                    if selected_tile.tile.is_some() && selected_tile.entity.is_some() {
-                        ev_tile_desel.send(TileDeselectEvent {
-                            tile: selected_tile.tile.clone().unwrap(),
-                            entity: selected_tile.entity.unwrap(),
-                        });
-                    }
-
-                    selected_tile.tile = Some(tile.clone());
-                    selected_tile.entity = Some(ent);
-
                     ev_tile_select.send(TileSelectEvent {
                         tile: tile.clone(),
                         entity: ent,
+                        hex: *current,
                     });
                 }
             }
@@ -143,26 +166,46 @@ pub fn handle_tile_selection(
 }
 
 pub fn handle_selected_tile_material(
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut tiles: Query<(&Tile, &Handle<StandardMaterial>)>,
     mut ev_tile_select: EventReader<TileSelectEvent>,
     mut ev_tile_deselect: EventReader<TileDeselectEvent>,
+    mut commands: Commands,
+    assets_server: Res<AssetServer>,
+    hex_grid: Res<HexGrid>,
+    mut cross_query: Query<(Entity, &Cross)>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in ev_tile_select.read() {
-        for (tile_component, material_handle) in tiles.iter_mut() {
-            if tile_component == &event.tile {
-                let material = materials.get_mut(material_handle).unwrap();
-                material.base_color = Color::rgb(1.0, 1.0, 0.0);
-            }
-        }
+        println!("Selecting tile: {:?}", event.tile);
+        let hex = event.hex;
+        let cross_sprite = assets_server.load("sprites/cross.png");
+        let world_position = hex_grid.layout.hex_to_world_pos(hex);
+
+        let quad = meshes.add(Rectangle::new(8.0, 8.0));
+        let quad_material = materials.add(StandardMaterial {
+            base_color_texture: Some(cross_sprite.clone()),
+            alpha_mode: AlphaMode::Blend,
+            unlit: true,
+            ..default()
+        });
+
+        commands.spawn((
+            PbrBundle {
+                mesh: quad.clone().into(),
+                material: quad_material.clone(),
+                transform: Transform::from_xyz(world_position.x, 2.0, world_position.y)
+                    .with_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+                ..default()
+            },
+            Cross,
+            Name::new("Cross".to_string()),
+        ));
     }
 
     for event in ev_tile_deselect.read() {
-        for (tile_component, material_handle) in tiles.iter_mut() {
-            if tile_component == &event.tile {
-                let material = materials.get_mut(material_handle).unwrap();
-                material.base_color = get_color_from_biome(&event.tile.biome);
-            }
+        println!("Deselecting tile: {:?}", event.tile);
+        for (entity, _) in cross_query.iter_mut() {
+            commands.entity(entity).despawn_recursive();
         }
     }
 }

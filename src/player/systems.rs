@@ -133,7 +133,7 @@ pub fn handle_hero_deselect(
     mut tile_transforms: Query<(Entity, &mut Transform), With<Tile>>,
 ) {
     for event in ev_hero_deselect.read() {
-        if event.button == PointerButton::Secondary {
+        if event.button.is_none() {
             commands
                 .entity(event.hero)
                 .remove::<SelectedHero>()
@@ -142,6 +142,23 @@ pub fn handle_hero_deselect(
 
             for (_, mut transform) in tile_transforms.iter_mut() {
                 *transform = transform.with_scale(Vec3::splat(1.0));
+            }
+        }
+
+        if let Some(button) = event.button {
+            match button {
+                PointerButton::Secondary => {
+                    commands
+                        .entity(event.hero)
+                        .remove::<SelectedHero>()
+                        .remove::<HasCalculatedFieldOfMovement>();
+                    grid.reachable_entities.clear();
+
+                    for (_, mut transform) in tile_transforms.iter_mut() {
+                        *transform = transform.with_scale(Vec3::splat(1.0));
+                    }
+                }
+                _ => {}
             }
         }
     }
