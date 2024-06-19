@@ -14,7 +14,17 @@ pub mod player;
 fn main() {
     App::new()
         .init_resource::<SelectedTile>()
-        .add_plugins(DefaultPlugins.set(low_latency_window_plugin()))
+        .add_plugins(
+            DefaultPlugins
+                .set(low_latency_window_plugin())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Project Strategy".to_string(),
+                        ..default()
+                    }),
+                    ..default()
+                }),
+        )
         // .add_plugins(EguiPlugin)
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(FilterQueryInspectorPlugin::<Without<Tile>>::default())

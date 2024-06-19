@@ -123,10 +123,14 @@ fn calculate_path(
     goal: Hex,
     grid: &HexGrid,
     tiles: Vec<(Entity, &Tile)>,
+    movement_points: u32,
 ) -> Option<Vec<Hex>> {
     a_star(start, goal, |_, h| {
         for (entity, tile) in tiles.iter() {
             if grid.entities.get(&h).map(|&ent| ent) == Some(*entity) {
+                if movement_points < tile.cost()? {
+                    return None;
+                }
                 return tile.cost();
             }
         }
@@ -139,7 +143,6 @@ pub fn handle_hero_movement(
     mut hero_query: Query<(Entity, Option<&mut MovePath>, &mut Transform), With<SelectedHero>>,
     grid: Res<HexGrid>,
     mut commands: Commands,
-    move_path_preview_query: Query<Entity, With<MovePathPreview>>,
 ) {
     for (hero_entity, move_path_option, mut transform) in hero_query.iter_mut() {
         // todo: move player along the path
@@ -178,36 +181,37 @@ pub fn calculate_path_system(
     mut commands: Commands,
     grid: ResMut<HexGrid>,
     tiles: Query<(Entity, &Tile)>,
-    move_target_query: Query<(Entity, &MoveTarget), With<SelectedHero>>,
-    hero_transform_query: Query<(&Hero, &Transform), With<SelectedHero>>,
+    hero_query: Query<
+        (Entity, &Hero, &Transform, &MovementPoints, &MoveTarget),
+        With<SelectedHero>,
+    >,
     mut ev_tile_select: EventReader<TileSelectEvent>,
     mut ev_path_calculated: EventWriter<PathCalculatedEvent>,
 ) {
     ev_tile_select.read().for_each(|_| {
-        if move_target_query.iter().count() != 1 {
-            return;
-        }
-
-        let move_target = move_target_query.single();
-        for (_, transform) in hero_transform_query.iter() {
+        for (hero_entity, _, transform, hero_movement_points, move_target) in hero_query.iter() {
             let start = grid
                 .layout
                 .world_pos_to_hex(Vec2::new(transform.translation.x, transform.translation.z));
-            let goal = move_target.1 .0;
+            let goal = move_target.0;
 
-            let path = calculate_path(start, goal, &grid, tiles.iter().collect())
-                .unwrap_or_else(|| vec![]);
+            let path = calculate_path(
+                start,
+                goal,
+                &grid,
+                tiles.iter().collect(),
+                hero_movement_points.0,
+            )
+            .unwrap_or_else(|| vec![]);
 
             let path_entites: Vec<Entity> = path
                 .iter()
                 .filter_map(|h| grid.entities.get(h).map(|&ent| ent))
                 .collect();
 
-            commands
-                .entity(move_target.0)
-                .insert(MovePath(path_entites));
+            commands.entity(hero_entity).insert(MovePath(path_entites));
 
-            commands.entity(move_target.0).insert(HasCalculatedPath);
+            commands.entity(hero_entity).insert(HasCalculatedPath);
             ev_path_calculated.send(PathCalculatedEvent);
         }
     });
