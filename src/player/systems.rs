@@ -13,8 +13,9 @@ use crate::map::{
 
 use super::{
     components::{
-        Experience, HasCalculatedFieldOfMovement, HasCalculatedPath, Health, Hero, HeroMaxUnits,
-        HeroUnits, Level, MovePath, MovePathPreview, MoveTarget, MovementPoints, SelectedHero,
+        Experience, HasCalculatedFieldOfMovement, HasCalculatedPath, HasMoved, Health, Hero,
+        HeroMaxUnits, HeroUnits, Level, MovePath, MovePathPreview, MoveTarget, MovementPoints,
+        SelectedHero,
     },
     events::{HeroDeselectEvent, PathCalculatedEvent},
 };
@@ -145,11 +146,23 @@ fn calculate_path(
 }
 
 pub fn handle_hero_movement(
-    mut hero_query: Query<(Entity, Option<&mut MovePath>, &mut Transform), With<SelectedHero>>,
+    mut hero_query: Query<
+        (
+            Entity,
+            Option<&mut MovePath>,
+            &mut Transform,
+            Option<&HasMoved>,
+        ),
+        With<SelectedHero>,
+    >,
     grid: Res<HexGrid>,
     mut commands: Commands,
 ) {
-    for (hero_entity, move_path_option, mut transform) in hero_query.iter_mut() {
+    for (hero_entity, move_path_option, mut transform, has_moved) in hero_query.iter_mut() {
+        if has_moved.is_some() {
+            continue;
+        }
+
         // todo: move player along the path
         let move_path = match move_path_option {
             Some(move_path) => move_path,
@@ -177,7 +190,8 @@ pub fn handle_hero_movement(
                 .entity(hero_entity)
                 .remove::<MovePath>()
                 .remove::<HasCalculatedFieldOfMovement>()
-                .remove::<HasCalculatedPath>();
+                .remove::<HasCalculatedPath>()
+                .insert(HasMoved);
         }
     }
 }

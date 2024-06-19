@@ -7,6 +7,7 @@ use map::{components::Tile, resources::SelectedTile, MapPlugin};
 use player::PlayerPlugin;
 
 pub mod camera;
+pub mod core_gameplay;
 pub mod debug_gui;
 pub mod map;
 pub mod player;

@@ -62,6 +62,9 @@ pub struct HasCalculatedFieldOfMovement;
 #[derive(Component)]
 pub struct HasCalculatedPath;
 
+#[derive(Component)]
+pub struct HasMoved;
+
 #[derive(Component, Reflect)]
 pub struct MoveTarget(pub Hex);
 
@@ -70,3 +73,27 @@ pub struct MovePath(pub Vec<Entity>);
 
 #[derive(Component)]
 pub struct MovePathPreview(pub Entity);
+
+#[derive(Component)]
+pub struct Player1Marker;
+
+#[derive(Component)]
+pub struct Player2Marker;
+
+#[derive(Component)]
+pub struct Player3Marker;
+
+#[derive(Component)]
+pub struct Player4Marker;
+
+#[derive(Component)]
+pub struct Player5Marker;
+
+#[derive(Component)]
+pub struct Player6Marker;
+
+#[derive(Component)]
+pub struct Player7Marker;
+
+#[derive(Component)]
+pub struct Player8Marker;
