@@ -16,7 +16,7 @@ impl Biome {
         match self {
             Biome::Mountain => None,
             Biome::Plains => Some(1),
-            Biome::Forest => Some(4),
+            Biome::Forest => Some(5),
             Biome::Desert => Some(10),
             Biome::ShallowWater => Some(12),
             Biome::DeepWater => None,

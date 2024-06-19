@@ -92,6 +92,10 @@ pub fn display_field_of_movement(
     let field_of_movement = field_of_movement(hero_hex, movement_points.0, |h| {
         for (entity, tile) in tiles.iter() {
             if grid.entities.get(&h).map(|&ent| ent) == Some(entity) {
+                if movement_points.0 < tile.cost()? {
+                    return None;
+                }
+
                 return tile.cost();
             }
         }
@@ -131,6 +135,7 @@ fn calculate_path(
                 if movement_points < tile.cost()? {
                     return None;
                 }
+
                 return tile.cost();
             }
         }
