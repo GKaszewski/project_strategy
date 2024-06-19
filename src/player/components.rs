@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::HashSet};
+use bevy::prelude::*;
 use hexx::Hex;
 
 #[derive(Component)]
@@ -66,7 +66,7 @@ pub struct HasCalculatedPath;
 pub struct MoveTarget(pub Hex);
 
 #[derive(Component)]
-pub struct MovePath(pub HashSet<Entity>);
+pub struct MovePath(pub Vec<Entity>);
 
 #[derive(Component)]
 pub struct MovePathPreview(pub Entity);

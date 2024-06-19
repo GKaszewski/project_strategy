@@ -136,12 +136,41 @@ fn calculate_path(
 }
 
 pub fn handle_hero_movement(
-    mut hero_query: Query<(Entity, Option<&MovePath>, &mut Transform), With<SelectedHero>>,
+    mut hero_query: Query<(Entity, Option<&mut MovePath>, &mut Transform), With<SelectedHero>>,
     grid: Res<HexGrid>,
     mut commands: Commands,
+    move_path_preview_query: Query<Entity, With<MovePathPreview>>,
 ) {
     for (hero_entity, move_path_option, mut transform) in hero_query.iter_mut() {
         // todo: move player along the path
+        let move_path = match move_path_option {
+            Some(move_path) => move_path,
+            None => continue,
+        };
+
+        let mut path = move_path.0.iter().rev().map(|&entity| {
+            grid.entities
+                .iter()
+                .find_map(|(hex, ent)| if *ent == entity { Some(hex) } else { None })
+                .unwrap()
+        }); // now we have the path reversed from goal to start
+
+        // we have to get the first element of the path that is in reach of the hero
+
+        let first_reachable_hex =
+            path.find(|&hex| grid.reachable_entities.contains(&grid.entities[hex]));
+
+        if let Some(first_reachable_hex) = first_reachable_hex {
+            let move_pos = grid.layout.hex_to_world_pos(*first_reachable_hex);
+
+            transform.translation = Vec3::new(move_pos.x, transform.translation.y, move_pos.y);
+
+            commands
+                .entity(hero_entity)
+                .remove::<MovePath>()
+                .remove::<HasCalculatedFieldOfMovement>()
+                .remove::<HasCalculatedPath>();
+        }
     }
 }
 
@@ -165,40 +194,18 @@ pub fn calculate_path_system(
                 .layout
                 .world_pos_to_hex(Vec2::new(transform.translation.x, transform.translation.z));
             let goal = move_target.1 .0;
-            let goal_entity = grid.entities.get(&goal).map(|&ent| ent).unwrap();
 
             let path = calculate_path(start, goal, &grid, tiles.iter().collect())
                 .unwrap_or_else(|| vec![]);
 
-            // check if the goal is reachable
-            if grid.reachable_entities.contains(&goal_entity) {
-                let path_entities: HashSet<_> = path
-                    .clone()
-                    .into_iter()
-                    .filter_map(|h| grid.entities.get(&h).map(|&ent| ent))
-                    .collect();
-                commands
-                    .entity(move_target.0)
-                    .insert(MovePath(path_entities.clone()));
-            } else {
-                // if it is not reachable, get the closest to the goal that is reachable
-                path.iter().rev().for_each(|h| {
-                    if let Some(entity) = grid.entities.get(h) {
-                        if grid.reachable_entities.contains(entity) {
-                            let path_entities: HashSet<_> = path
-                                .clone()
-                                .into_iter()
-                                .filter_map(|h| grid.entities.get(&h).map(|&ent| ent))
-                                .collect();
+            let path_entites: Vec<Entity> = path
+                .iter()
+                .filter_map(|h| grid.entities.get(h).map(|&ent| ent))
+                .collect();
 
-                            commands
-                                .entity(move_target.0)
-                                .insert(MovePath(path_entities.clone()));
-                            return;
-                        }
-                    }
-                });
-            }
+            commands
+                .entity(move_target.0)
+                .insert(MovePath(path_entites));
 
             commands.entity(move_target.0).insert(HasCalculatedPath);
             ev_path_calculated.send(PathCalculatedEvent);
