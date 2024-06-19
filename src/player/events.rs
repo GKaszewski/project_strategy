@@ -15,3 +15,6 @@ impl From<ListenerInput<Pointer<Down>>> for HeroDeselectEvent {
         }
     }
 }
+
+#[derive(Event)]
+pub struct PathCalculatedEvent;

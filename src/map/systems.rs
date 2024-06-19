@@ -1,4 +1,3 @@
-use bevy::render::render_resource::Texture;
 use bevy::window::PrimaryWindow;
 use bevy::{prelude::*, utils::HashSet};
 use hexx::*;
@@ -52,10 +51,8 @@ pub fn regenerate_grid(
     settings: Res<MapSettings>,
 ) {
     if keys.just_pressed(KeyCode::KeyR) {
-        grid.entities.iter_mut().for_each(|hex| {
-            for entity in hex.iter() {
-                commands.entity(*entity).despawn_recursive();
-            }
+        grid.entities.iter_mut().for_each(|(_, entity)| {
+            commands.entity(*entity).despawn_recursive();
         });
 
         grid.entities = generate_terrain_hex_grid(
@@ -92,6 +89,8 @@ pub fn handle_tile_selection(
     let window = windows.iter().next().unwrap();
     let (camera, cam_transform) = cameras.iter().next().unwrap();
 
+    let local_hex = *current;
+
     if mouse_button_input.just_pressed(MouseButton::Left) {
         if move_target_query.iter().next().is_some() {
             commands.entity(selected_hero_entity).remove::<MoveTarget>();
@@ -102,7 +101,7 @@ pub fn handle_tile_selection(
             });
 
             for (ent, tile) in tiles.iter() {
-                if grid.entities.get(*current).map(|&e| e) == Some(ent) {
+                if grid.entities.get(&local_hex).map(|&e| e) == Some(ent) {
                     ev_tile_desel.send(TileDeselectEvent {
                         tile: tile.clone(),
                         entity: ent,
@@ -135,13 +134,13 @@ pub fn handle_tile_selection(
 
         *current = hex_pos;
 
-        if let Some(tile_entity) = grid.entities.get(*current) {
+        if let Some(tile_entity) = grid.entities.get(&hex_pos) {
             for (ent, tile) in tiles.iter() {
                 if tile.cost() == None {
                     continue;
                 }
 
-                if grid.entities.get(*current).map(|&e| e) == Some(ent) {
+                if grid.entities.get(&hex_pos).map(|&e| e) == Some(ent) {
                     ev_tile_desel.send(TileDeselectEvent {
                         tile: tile.clone(),
                         entity: ent,
@@ -176,7 +175,6 @@ pub fn handle_selected_tile_material(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in ev_tile_select.read() {
-        println!("Selecting tile: {:?}", event.tile);
         let hex = event.hex;
         let cross_sprite = assets_server.load("sprites/cross.png");
         let world_position = hex_grid.layout.hex_to_world_pos(hex);
@@ -202,10 +200,9 @@ pub fn handle_selected_tile_material(
         ));
     }
 
-    for event in ev_tile_deselect.read() {
-        println!("Deselecting tile: {:?}", event.tile);
+    ev_tile_deselect.read().for_each(|_| {
         for (entity, _) in cross_query.iter_mut() {
             commands.entity(entity).despawn_recursive();
         }
-    }
+    });
 }

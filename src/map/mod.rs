@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use components::Tile;
 use events::{TileDeselectEvent, TileSelectEvent};
-use resources::{HexPreview, MapSettings, SelectedTile};
+use resources::{HexPreview, MapSettings};
 use systems::{handle_selected_tile_material, handle_tile_selection, regenerate_grid, setup_grid};
 
 pub mod components;
-mod events;
+pub mod events;
 pub mod resources;
 mod systems;
 mod utils;

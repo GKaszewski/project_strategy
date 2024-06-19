@@ -1,12 +1,15 @@
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{
+    prelude::*,
+    utils::{HashMap, HashSet},
+};
 use bevy_inspector_egui::prelude::*;
-use hexx::{storage::HexagonalMap, *};
+use hexx::*;
 
 use super::components::Tile;
 
 #[derive(Debug, Resource)]
 pub struct HexGrid {
-    pub entities: HexagonalMap<Entity>,
+    pub entities: HashMap<Hex, Entity>,
     pub reachable_entities: HashSet<Entity>,
     pub layout: HexLayout,
 }
@@ -14,7 +17,7 @@ pub struct HexGrid {
 impl Default for HexGrid {
     fn default() -> Self {
         Self {
-            entities: HexagonalMap::new(Hex::ZERO, 0, |_| Entity::PLACEHOLDER),
+            entities: HashMap::default(),
             reachable_entities: HashSet::default(),
             layout: HexLayout::default(),
         }

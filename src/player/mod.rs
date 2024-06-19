@@ -3,9 +3,10 @@ use components::{
     AttackPoints, DefensePoints, Experience, Health, HeroMaxUnits, HeroUnits, Level, MoveTarget,
     MovementPoints, Position, Range, UnitType,
 };
-use events::HeroDeselectEvent;
+use events::{HeroDeselectEvent, PathCalculatedEvent};
 use systems::{
-    display_field_of_movement, handle_hero_deselect, handle_hero_movement, setup_player,
+    calculate_path_system, clear_move_path, display_field_of_movement, draw_move_path,
+    handle_hero_deselect, handle_hero_movement, setup_player,
 };
 
 pub mod components;
@@ -30,13 +31,17 @@ impl Plugin for PlayerPlugin {
             .register_type::<HeroMaxUnits>()
             .register_type::<MoveTarget>()
             .add_event::<HeroDeselectEvent>()
+            .add_event::<PathCalculatedEvent>()
             .add_systems(Startup, setup_player)
             .add_systems(
                 Update,
                 (
                     display_field_of_movement,
-                    handle_hero_movement,
                     handle_hero_deselect,
+                    calculate_path_system,
+                    handle_hero_movement,
+                    draw_move_path,
+                    clear_move_path,
                 ),
             );
     }
