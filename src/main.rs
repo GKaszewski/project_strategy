@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::quick::{FilterQueryInspectorPlugin, WorldInspectorPlugin};
 use bevy_mod_picking::prelude::*;
 use camera::CameraPlugin;
+use core_gameplay::CoreGameplayPlugin;
 use debug_gui::DebugGuiPlugin;
 use map::{components::Tile, resources::SelectedTile, MapPlugin};
 use player::PlayerPlugin;
@@ -34,6 +35,7 @@ fn main() {
         .add_plugins(CameraPlugin)
         .add_plugins(DebugGuiPlugin)
         .add_plugins(PlayerPlugin)
-        //.insert_resource(DebugPickingMode::Normal)
+        .add_plugins(CoreGameplayPlugin)
+        .insert_resource(DebugPickingMode::Normal)
         .run();
 }
