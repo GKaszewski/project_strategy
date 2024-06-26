@@ -1,5 +1,10 @@
 use bevy::prelude::*;
 
+pub mod components;
+pub mod events;
+pub mod resources;
+pub mod systems;
+
 pub struct ActionsPlugin;
 
 impl Plugin for ActionsPlugin {
