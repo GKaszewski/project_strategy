@@ -7,6 +7,7 @@ use debug_gui::DebugGuiPlugin;
 use map::{components::Tile, resources::SelectedTile, MapPlugin};
 use player::PlayerPlugin;
 
+pub mod actions;
 pub mod camera;
 pub mod core_gameplay;
 pub mod debug_gui;
@@ -36,6 +37,6 @@ fn main() {
         .add_plugins(DebugGuiPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(CoreGameplayPlugin)
-        .insert_resource(DebugPickingMode::Normal)
+        // .insert_resource(DebugPickingMode::Normal)
         .run();
 }
