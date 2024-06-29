@@ -1678,21 +1678,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "client"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy-inspector-egui 0.24.0",
- "bevy_editor_pls",
- "bevy_egui 0.27.1",
- "bevy_mod_picking",
- "common",
- "hexx",
- "noise",
- "rand",
-]
-
-[[package]]
 name = "clipboard-win"
 version = "5.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1757,10 +1742,6 @@ dependencies = [
  "bytes",
  "memchr",
 ]
-
-[[package]]
-name = "common"
-version = "0.1.0"
 
 [[package]]
 name = "concurrent-queue"
@@ -3713,6 +3694,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43d84d1d7a6ac92673717f9f6d1518374ef257669c24ebc5ac25d5033828be58"
 
 [[package]]
+name = "project_strategy"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui 0.24.0",
+ "bevy_editor_pls",
+ "bevy_egui 0.27.1",
+ "bevy_mod_picking",
+ "hexx",
+ "noise",
+ "rand",
+]
+
+[[package]]
 name = "quick-xml"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3997,13 +3992,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "server"
-version = "0.1.0"
-dependencies = [
- "common",
 ]
 
 [[package]]
